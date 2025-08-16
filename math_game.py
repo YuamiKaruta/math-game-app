@@ -20,7 +20,7 @@ st.set_page_config(
 st.markdown("""
 <style>
     .main-title {
-        font-size: 42px;
+        font-size: clamp(28px, 8vw, 42px);
         font-weight: bold;
         color: #FF5733;
         text-align: center;
@@ -33,7 +33,7 @@ st.markdown("""
         margin-bottom: 20px;
     }
     .question {
-        font-size: 40px;
+        font-size: clamp(32px, 10vw, 40px);
         font-weight: bold;
         color: #1E88E5;
         text-align: center;
@@ -75,6 +75,51 @@ st.markdown("""
     .progress-container {
         margin: 20px 0;
     }
+    .answer-display {
+        font-size: 36px;
+        font-weight: bold;
+        color: #1976D2;
+        text-align: center;
+        background-color: #E3F2FD;
+        border: 3px solid #1976D2;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 20px 0;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .keypad-button {
+        font-size: 28px;
+        font-weight: bold;
+        padding: 15px;
+        margin: 5px;
+        border-radius: 10px;
+        border: none;
+        background-color: #2196F3;
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s;
+        width: 100%;
+        height: 60px;
+    }
+    .keypad-button:hover {
+        background-color: #1976D2;
+        transform: scale(1.05);
+    }
+    .keypad-button.special {
+        background-color: #FF9800;
+    }
+    .keypad-button.special:hover {
+        background-color: #F57C00;
+    }
+    .keypad-button.submit {
+        background-color: #4CAF50;
+    }
+    .keypad-button.submit:hover {
+        background-color: #388E3C;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -95,6 +140,8 @@ if 'game_complete' not in st.session_state:
     st.session_state.game_complete = False
 if 'results' not in st.session_state:
     st.session_state.results = []
+if 'current_answer' not in st.session_state:
+    st.session_state.current_answer = ""
 
 def generate_question(mode, difficulty):
     if mode == "足し算":
@@ -162,6 +209,18 @@ def reset_game():
     st.session_state.question_start_time = None
     st.session_state.game_complete = False
     st.session_state.results = []
+    st.session_state.current_answer = ""
+
+def add_digit(digit):
+    if len(st.session_state.current_answer) < 4:  # 最大4桁まで
+        st.session_state.current_answer += str(digit)
+
+def clear_answer():
+    st.session_state.current_answer = ""
+
+def backspace():
+    if st.session_state.current_answer:
+        st.session_state.current_answer = st.session_state.current_answer[:-1]
 
 def main():
     st.markdown('<div class="main-title">🧮 小学生の計算ゲーム 🧮</div>', unsafe_allow_html=True)
@@ -234,11 +293,78 @@ def main():
         a, b, correct_answer, symbol = st.session_state.current_question
         st.markdown(f'<div class="question">{a} {symbol} {b} = ?</div>', unsafe_allow_html=True)
         
-        # 回答欄
-        col1, col2, col3 = st.columns([1, 2, 1])
+        # 回答表示
+        answer_display = st.session_state.current_answer if st.session_state.current_answer else "0"
+        st.markdown(f'<div class="answer-display">{answer_display}</div>', unsafe_allow_html=True)
+        
+        # テンキー
+        col1, col2, col3 = st.columns(3)
+        
+        # 数字ボタン（7-9）
+        with col1:
+            if st.button("7", key="btn_7", use_container_width=True):
+                add_digit(7)
+                st.rerun()
         with col2:
-            answer_input = st.number_input("答えを入力してください", min_value=0, step=1, key=f"answer_{st.session_state.question_count}")
-            submitted = st.button("回答する", use_container_width=True)
+            if st.button("8", key="btn_8", use_container_width=True):
+                add_digit(8)
+                st.rerun()
+        with col3:
+            if st.button("9", key="btn_9", use_container_width=True):
+                add_digit(9)
+                st.rerun()
+        
+        # 数字ボタン（4-6）
+        with col1:
+            if st.button("4", key="btn_4", use_container_width=True):
+                add_digit(4)
+                st.rerun()
+        with col2:
+            if st.button("5", key="btn_5", use_container_width=True):
+                add_digit(5)
+                st.rerun()
+        with col3:
+            if st.button("6", key="btn_6", use_container_width=True):
+                add_digit(6)
+                st.rerun()
+        
+        # 数字ボタン（1-3）
+        with col1:
+            if st.button("1", key="btn_1", use_container_width=True):
+                add_digit(1)
+                st.rerun()
+        with col2:
+            if st.button("2", key="btn_2", use_container_width=True):
+                add_digit(2)
+                st.rerun()
+        with col3:
+            if st.button("3", key="btn_3", use_container_width=True):
+                add_digit(3)
+                st.rerun()
+        
+        # 最下段（0、クリア、バックスペース）
+        with col1:
+            if st.button("0", key="btn_0", use_container_width=True):
+                add_digit(0)
+                st.rerun()
+        with col2:
+            if st.button("⌫", key="btn_back", use_container_width=True):
+                backspace()
+                st.rerun()
+        with col3:
+            if st.button("C", key="btn_clear", use_container_width=True):
+                clear_answer()
+                st.rerun()
+        
+        # 回答ボタン
+        st.markdown("<br>", unsafe_allow_html=True)
+        submitted = st.button("🎯 回答する", key="submit_answer", use_container_width=True, type="primary")
+        
+        # 回答の値を取得
+        try:
+            answer_input = int(st.session_state.current_answer) if st.session_state.current_answer else 0
+        except ValueError:
+            answer_input = 0
             
         # 回答処理
         if submitted:
@@ -275,6 +401,7 @@ def main():
                 
                 # 次の問題に進む
                 st.session_state.question_count += 1
+                st.session_state.current_answer = ""  # 回答をクリア
                 
                 if st.session_state.question_count >= 50:
                     st.session_state.game_complete = True
@@ -302,6 +429,7 @@ def main():
                 
                 # 同じ問題を再度出題（質問開始時間をリセット）
                 st.session_state.question_start_time = time.time()
+                st.session_state.current_answer = ""  # 回答をクリア
                 # ここを修正
                 st.rerun()
     
@@ -340,26 +468,42 @@ def main():
         with col1:
             # 正解率のドーナツグラフ
             fig, ax = plt.subplots(figsize=(4, 4))
-            ax.pie([correct_count, incorrect_count - 50], 
-                  labels=["正解", "間違い"], 
-                  colors=["#4CAF50", "#F44336"],
-                  autopct='%1.1f%%',
-                  startangle=90,
-                  wedgeprops={'width': 0.5})
+            # エラー修正：50問中の正解数と不正解数を正しく計算
+            wrong_count = 50 - correct_count
+            if wrong_count > 0:
+                ax.pie([correct_count, wrong_count], 
+                      labels=["正解", "間違い"], 
+                      colors=["#4CAF50", "#F44336"],
+                      autopct='%1.1f%%',
+                      startangle=90,
+                      wedgeprops={'width': 0.5})
+            else:
+                # 全問正解の場合
+                ax.pie([correct_count], 
+                      labels=["正解"], 
+                      colors=["#4CAF50"],
+                      autopct='%1.1f%%',
+                      startangle=90,
+                      wedgeprops={'width': 0.5})
             ax.axis('equal')
             plt.title("問題の正解率")
             st.pyplot(fig)
         
         with col2:
             # 回答時間の分布
-            answer_times = df["時間"].tolist()
-            fig, ax = plt.subplots(figsize=(4, 4))
-            ax.hist(answer_times, bins=[0, 1, 3, 5, max(answer_times)], 
-                   color=["#4CAF50", "#8BC34A", "#FFEB3B", "#FF9800"])
-            ax.set_xlabel("回答時間（秒）")
-            ax.set_ylabel("回数")
-            plt.title("回答時間の分布")
-            st.pyplot(fig)
+            if len(df) > 0:
+                answer_times = df["時間"].tolist()
+                fig, ax = plt.subplots(figsize=(4, 4))
+                max_time = max(answer_times) if answer_times else 5
+                bins = [0, 1, 3, 5, max(max_time + 1, 6)]
+                ax.hist(answer_times, bins=bins, 
+                       color=["#4CAF50", "#8BC34A", "#FFEB3B", "#FF9800"])
+                ax.set_xlabel("回答時間（秒）")
+                ax.set_ylabel("回数")
+                plt.title("回答時間の分布")
+                st.pyplot(fig)
+            else:
+                st.write("データがありません")
         
         # スコア内訳
         score_breakdown = {
