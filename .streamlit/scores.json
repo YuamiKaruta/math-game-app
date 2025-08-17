@@ -1,0 +1,16 @@
+{
+  "user1": {
+    "history": [
+      {
+        "timestamp": "2025-08-16 19:52:08",
+        "mode": "足し算",
+        "difficulty": "イージー",
+        "score": 180,
+        "correct_count": 10,
+        "total_questions": 10,
+        "total_time": 21
+      }
+    ],
+    "mistakes": []
+  }
+}
